@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "C:\Users\Lap Zone\kids-book\CRM-Digital-FTE-Factory-5\prototype\test_agent.py", line 9, in <module>
+    from agent import CustomerSuccessAgent
+  File "C:\Users\Lap Zone\kids-book\CRM-Digital-FTE-Factory-5\prototype\agent.py", line 19, in <module>
+    class CustomerSuccessAgent:
+  File "C:\Users\Lap Zone\kids-book\CRM-Digital-FTE-Factory-5\prototype\agent.py", line 169, in CustomerSuccessAgent
+    def _categorize_message(self, message: str, sentiment: SentimentAnalysis) -> Category:
+                                                           ^^^^^^^^^^^^^^^^^
+NameError: name 'SentimentAnalysis' is not defined. Did you mean: 'SentimentAnalyzer'?

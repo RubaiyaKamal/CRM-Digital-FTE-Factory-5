@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crm-worker
+  namespace: crm-fte
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crm-worker
+  template:
+    metadata:
+      labels:
+        app: crm-worker
+    spec:
+      containers:
+        - name: worker
+          image: crm-fte-worker:latest
+          envFrom:
+            - configMapRef:
+                name: crm-config
+            - secretRef:
+                name: crm-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
