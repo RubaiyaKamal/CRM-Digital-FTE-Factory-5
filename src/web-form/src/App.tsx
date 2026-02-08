@@ -37,9 +37,12 @@ const App: React.FC = () => {
         throw new Error('Submission failed');
       }
 
-      // Connect to SSE for response
+      const data = await response.json();
+      const conversationId = data.conversation_id;
+
+      // Connect to SSE for response (polls DB via conversation_id)
       const eventSource = new EventSource(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/webhooks/web_form/stream/${sid}`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/webhooks/web_form/stream/${conversationId}`
       );
 
       eventSource.onmessage = (event) => {

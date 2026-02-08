@@ -77,15 +77,41 @@ async def health():
     return {"status": "healthy", "env": settings.app_env}
 
 
-@app.get("/webhooks/web_form/stream/{session_id}")
-async def web_form_stream(session_id: str):
-    """SSE endpoint for real-time web form responses."""
-    adapter = WebFormAdapter()
+@app.get("/webhooks/web_form/stream/{conversation_id}")
+async def web_form_stream(conversation_id: str):
+    """SSE endpoint: polls DB for agent reply to a conversation."""
+    import asyncio
+    import json
+    import time
+
+    from src.database.connection import get_db_pool
+
+    async def generate():
+        yield 'data: {"type": "connected"}\n\n'
+
+        pool = await get_db_pool()
+        deadline = time.monotonic() + 90  # wait up to 90s
+
+        while time.monotonic() < deadline:
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """
+                    SELECT content FROM messages
+                    WHERE conversation_id = $1 AND role = 'agent'
+                    ORDER BY created_at DESC LIMIT 1
+                    """,
+                    conversation_id,
+                )
+            if row:
+                yield f'data: {json.dumps({"type": "response", "content": row["content"]})}\n\n'
+                return
+            yield 'data: {"type": "heartbeat"}\n\n'
+            await asyncio.sleep(2)
+
+        yield 'data: {"type": "timeout"}\n\n'
+
     return StreamingResponse(
-        adapter.sse_stream(session_id),
+        generate(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
