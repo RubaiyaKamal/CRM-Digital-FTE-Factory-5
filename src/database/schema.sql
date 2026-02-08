@@ -130,18 +130,18 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers for updated_at
-CREATE TRIGGER update_customers_updated_at
+CREATE OR REPLACE TRIGGER update_customers_updated_at
     BEFORE UPDATE ON customers
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_conversations_updated_at
+CREATE OR REPLACE TRIGGER update_conversations_updated_at
     BEFORE UPDATE ON conversations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_tickets_updated_at
+CREATE OR REPLACE TRIGGER update_tickets_updated_at
     BEFORE UPDATE ON tickets
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_knowledge_base_updated_at
+CREATE OR REPLACE TRIGGER update_knowledge_base_updated_at
     BEFORE UPDATE ON knowledge_base
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
