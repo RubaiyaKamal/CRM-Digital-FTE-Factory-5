@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu, X, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { Menu, X, Zap, LayoutDashboard } from 'lucide-react';
 import { colors, gradients } from '@/lib/colors';
 
 export default function Navbar() {
@@ -72,14 +73,23 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button - Desktop */}
-          <button
-            onClick={() => scrollToSection('contact')}
-            className="hidden md:block px-6 py-3 rounded-lg text-white font-semibold shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-            style={{ background: gradients.primary }}
-          >
-            Get Started
-          </button>
+          {/* CTA Buttons - Desktop */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 px-5 py-3 rounded-lg bg-white text-primary-purple font-semibold border-2 border-primary-purple hover:bg-purple-50 transition-all"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </Link>
+            <button
+              onClick={() => scrollToSection('contact')}
+              className="px-6 py-3 rounded-lg text-white font-semibold shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+              style={{ background: gradients.primary }}
+            >
+              Get Started
+            </button>
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -112,6 +122,13 @@ export default function Navbar() {
                   .join(' ')}
               </button>
             ))}
+            <Link
+              href="/dashboard"
+              className="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg bg-white text-primary-purple font-semibold border-2 border-primary-purple"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </Link>
             <button
               onClick={() => scrollToSection('contact')}
               className="w-full px-6 py-3 rounded-lg text-white font-semibold shadow-lg"

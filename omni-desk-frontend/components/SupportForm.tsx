@@ -50,8 +50,8 @@ export default function SupportForm() {
     setIsSubmitting(true);
 
     try {
-      // API call to backend
-      const response = await fetch('http://localhost:8000/webhooks/web_form', {
+      // API call via Next.js proxy (avoids CORS)
+      const response = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
