@@ -71,7 +71,15 @@ async def receive_webhook(channel: str, request: Request):
             conn, customer_id, webhook.channel.value, webhook.subject
         )
 
-        # Store incoming message
+        # Store incoming message with metadata
+        message_metadata = {
+            "raw_message_id": webhook.message_id,
+            "subject": webhook.subject,
+        }
+        # Add channel-specific metadata (e.g., gmail_thread_id for email)
+        if hasattr(webhook, "metadata") and webhook.metadata:
+            message_metadata.update(webhook.metadata)
+
         message_id = await conn.fetchval(
             """
             INSERT INTO messages (conversation_id, role, content, channel, metadata)
@@ -81,7 +89,7 @@ async def receive_webhook(channel: str, request: Request):
             conversation_id,
             webhook.message_text,
             webhook.channel.value,
-            json.dumps({"raw_message_id": webhook.message_id}),
+            json.dumps(message_metadata),
         )
 
     # Publish to Kafka

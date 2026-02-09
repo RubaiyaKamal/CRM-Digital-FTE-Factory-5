@@ -31,9 +31,16 @@ class Settings:
     # Twilio (WhatsApp)
     twilio_auth_token: str = os.getenv("TWILIO_AUTH_TOKEN", "")
     twilio_account_sid: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+    twilio_phone_number: str = os.getenv("TWILIO_PHONE_NUMBER", "")
+    whatsapp_phone_number: str = os.getenv("WHATSAPP_PHONE_NUMBER", "")
+    whatsapp_mock: bool = os.getenv("WHATSAPP_MOCK", "true").lower() == "true"
 
-    # Gmail (mock for dev)
+    # Gmail
     gmail_mock: bool = os.getenv("GMAIL_MOCK", "true").lower() == "true"
+    gmail_credentials_file: str = os.getenv("GMAIL_CREDENTIALS_FILE", "credentials.json")
+    gmail_polling_interval: int = int(os.getenv("GMAIL_POLLING_INTERVAL", "30"))
+    gmail_sender_email: str = os.getenv("GMAIL_SENDER_EMAIL", "")
+    api_base_url: str = os.getenv("API_BASE_URL", "http://localhost:8000")
 
     # CORS
     cors_origins: str = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000")

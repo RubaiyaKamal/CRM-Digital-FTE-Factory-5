@@ -96,6 +96,32 @@ services:
     volumes:
       - ./context:/app/context:ro
 
+  gmail-poller:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: crm_gmail_poller
+    command: python -m src.workers.gmail_poller
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://crm_user:crm_pass@postgres:5432/crm_fte
+      KAFKA_BROKERS: kafka:29092
+      API_BASE_URL: http://api:8000
+      GMAIL_SENDER_EMAIL: ${GMAIL_SENDER_EMAIL}
+      GMAIL_CREDENTIALS_FILE: credentials.json
+      GMAIL_POLLING_INTERVAL: ${GMAIL_POLLING_INTERVAL:-30}
+      GMAIL_MOCK: ${GMAIL_MOCK:-false}
+      APP_ENV: development
+    volumes:
+      - ./credentials.json:/app/credentials.json:ro
+    restart: unless-stopped
+
   web-form:
     build:
       context: ./src/web-form

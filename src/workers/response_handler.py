@@ -62,10 +62,35 @@ async def _handle_response(payload: dict):
     # Format for channel
     formatted = format_response(response_text, channel, customer_identifier)
 
+    # Get channel-specific metadata for threading (email only)
+    send_kwargs = {"session_id": customer_identifier}
+
+    if channel_name == "email":
+        # Fetch gmail_thread_id from the most recent customer message
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            msg_row = await conn.fetchrow(
+                """
+                SELECT metadata FROM messages
+                WHERE conversation_id = $1 AND role = 'customer'
+                ORDER BY created_at DESC LIMIT 1
+                """,
+                conversation_id,
+            )
+
+            if msg_row and msg_row["metadata"]:
+                metadata = msg_row["metadata"]
+                gmail_thread_id = metadata.get("gmail_thread_id")
+                subject = metadata.get("subject", "Re: Support Request")
+
+                if gmail_thread_id:
+                    send_kwargs["gmail_thread_id"] = gmail_thread_id
+                    send_kwargs["subject"] = f"Re: {subject}" if not subject.startswith("Re:") else subject
+
     # Send via channel adapter
     adapter = _channel_adapters.get(channel_name)
     if adapter:
-        await adapter.send(customer_identifier, formatted, session_id=customer_identifier)
+        await adapter.send(customer_identifier, formatted, **send_kwargs)
 
     # Record metrics in DB
     pool = await get_db_pool()

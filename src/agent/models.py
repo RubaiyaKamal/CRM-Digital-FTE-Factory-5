@@ -53,6 +53,7 @@ class IncomingWebhook(BaseModel):
     subject: Optional[str] = None
     message_text: str
     raw_payload: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)  # Channel-specific metadata
     received_at: datetime = Field(default_factory=datetime.utcnow)
 
 
