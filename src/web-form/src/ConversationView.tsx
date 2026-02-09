@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { colors, gradients } from './theme';
 
 interface Message {
   role: 'customer' | 'agent';
@@ -23,7 +24,10 @@ const ConversationView: React.FC<ConversationViewProps> = ({ messages, status })
       <div style={styles.header}>
         <span style={styles.headerTitle}>Conversation</span>
         {status === 'waiting' && (
-          <span style={styles.statusBadge}>Agent is typing...</span>
+          <div style={styles.statusBadge}>
+            <span style={styles.pulse}></span>
+            <span>AI is thinking...</span>
+          </div>
         )}
       </div>
 
@@ -38,7 +42,7 @@ const ConversationView: React.FC<ConversationViewProps> = ({ messages, status })
           >
             <div style={styles.messageMeta}>
               <span style={styles.roleLabel}>
-                {msg.role === 'customer' ? 'You' : 'CloudFlow Support'}
+                {msg.role === 'customer' ? 'You' : '🤖 OmniDesk AI'}
               </span>
               <span style={styles.timestamp}>
                 {msg.timestamp.toLocaleTimeString()}
@@ -62,70 +66,83 @@ const ConversationView: React.FC<ConversationViewProps> = ({ messages, status })
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: '#fff',
-    borderRadius: '12px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+    background: colors.white,
+    borderRadius: '16px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
     overflow: 'hidden',
   },
   header: {
-    padding: '16px 20px',
-    borderBottom: '1px solid #eee',
+    padding: '20px 24px',
+    borderBottom: `2px solid ${colors.gray.lightest}`,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    background: gradients.subtle,
   },
   headerTitle: {
     fontWeight: '700',
-    fontSize: '16px',
-    color: '#1a1a2e',
+    fontSize: '18px',
+    color: colors.gray.darkest,
   },
   statusBadge: {
-    fontSize: '13px',
-    color: '#4f46e5',
-    fontStyle: 'italic',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    color: colors.primary.purple,
+    fontWeight: '600',
+  },
+  pulse: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    background: colors.primary.pink,
+    animation: 'pulse 1.5s ease-in-out infinite',
   },
   messages: {
-    padding: '16px',
+    padding: '20px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
-    maxHeight: '400px',
+    gap: '16px',
+    maxHeight: '450px',
     overflowY: 'auto',
   },
   message: {
-    padding: '12px 16px',
-    borderRadius: '10px',
+    padding: '14px 18px',
+    borderRadius: '12px',
     maxWidth: '85%',
   },
   customerMessage: {
-    background: '#f0f4ff',
+    background: `linear-gradient(135deg, ${colors.primary.pink}15 0%, ${colors.primary.purple}15 100%)`,
+    border: `2px solid ${colors.primary.pink}30`,
     alignSelf: 'flex-end',
-    borderBottomRightRadius: '2px',
+    borderBottomRightRadius: '4px',
   },
   agentMessage: {
-    background: '#f9fafb',
-    border: '1px solid #e5e7eb',
+    background: colors.gray.lightest,
+    border: `2px solid ${colors.gray.light}`,
     alignSelf: 'flex-start',
-    borderBottomLeftRadius: '2px',
+    borderBottomLeftRadius: '4px',
   },
   messageMeta: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: '6px',
+    marginBottom: '8px',
+    alignItems: 'center',
   },
   roleLabel: {
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#555',
+    fontSize: '13px',
+    fontWeight: '700',
+    color: colors.gray.dark,
   },
   timestamp: {
-    fontSize: '11px',
-    color: '#999',
+    fontSize: '12px',
+    color: colors.gray.medium,
   },
   messageContent: {
     fontSize: '15px',
-    lineHeight: '1.5',
-    color: '#222',
+    lineHeight: '1.6',
+    color: colors.gray.darkest,
     whiteSpace: 'pre-wrap' as const,
   },
 };

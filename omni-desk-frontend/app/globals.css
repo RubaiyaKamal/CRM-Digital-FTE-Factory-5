@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F5F5F5;
+  --foreground: #424242;
+
+  /* OmniDesk AI Brand Colors */
+  --primary-pink: #E91E63;
+  --primary-purple: #9C27B0;
+  --primary-dark-purple: #6A1B9A;
+
+  /* Purple tints */
+  --purple-100: #F3E5F5;
+  --purple-50: #F9F5FC;
+
+  /* Grays */
+  --gray-lightest: #F5F5F5;
+  --gray-light: #E0E0E0;
+  --gray-medium: #9E9E9E;
+  --gray-dark: #424242;
+  --gray-darkest: #212121;
+
+  /* Utility colors */
+  --success: #66BB6A;
+  --warning: #FFA726;
+  --error: #EF5350;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Brand colors */
+  --color-primary-pink: var(--primary-pink);
+  --color-primary-purple: var(--primary-purple);
+  --color-primary-dark-purple: var(--primary-dark-purple);
+
+  --color-purple-100: var(--purple-100);
+  --color-purple-50: var(--purple-50);
+
+  --color-gray-lightest: var(--gray-lightest);
+  --color-gray-light: var(--gray-light);
+  --color-gray-medium: var(--gray-medium);
+  --color-gray-dark: var(--gray-dark);
+  --color-gray-darkest: var(--gray-darkest);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}

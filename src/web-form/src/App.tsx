@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import SupportForm from './SupportForm';
+import SupportForm, { FormData } from './SupportForm';
 import ConversationView from './ConversationView';
+import { colors, gradients } from './theme';
 
 interface Message {
   role: 'customer' | 'agent';
@@ -13,24 +14,35 @@ const App: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'waiting' | 'responded'>('idle');
 
-  const handleSubmit = async (email: string, message: string, subject?: string) => {
-    const sid = `${email}-${Date.now()}`;
+  const handleSubmit = async (formData: FormData) => {
+    const sid = `${formData.email}-${Date.now()}`;
     setSessionId(sid);
     setStatus('waiting');
 
     // Add customer message
     setMessages(prev => [...prev, {
       role: 'customer',
-      content: message,
+      content: formData.message,
       timestamp: new Date(),
     }]);
 
     // Submit to API
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/webhooks/web_form`, {
+      const payload = {
+        email: formData.email,
+        message: formData.message,
+        subject: formData.subject || undefined,
+        session_id: sid,
+        // Additional fields for the new form structure
+        name: formData.name,
+        category: formData.category,
+        priority: formData.priority,
+      };
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/webhooks/web_form`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, message, subject, session_id: sid }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -42,7 +54,7 @@ const App: React.FC = () => {
 
       // Connect to SSE for response (polls DB via conversation_id)
       const eventSource = new EventSource(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/webhooks/web_form/stream/${conversationId}`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/webhooks/web_form/stream/${conversationId}`
       );
 
       eventSource.onmessage = (event) => {
@@ -58,7 +70,7 @@ const App: React.FC = () => {
             eventSource.close();
           }
         } catch {
-          // ignore heartbeats
+          // ignore heartbeats and other non-JSON events
         }
       };
 
@@ -80,8 +92,12 @@ const App: React.FC = () => {
   return (
     <div style={styles.app}>
       <header style={styles.header}>
-        <h1 style={styles.title}>CloudFlow Support</h1>
-        <p style={styles.subtitle}>How can we help you today?</p>
+        <div style={styles.logo}>
+          <div style={styles.logoIcon}>⚡</div>
+          <h1 style={styles.title}>OmniDesk AI</h1>
+        </div>
+        <p style={styles.subtitle}>24/7 Customer Success Agent</p>
+        <p style={styles.tagline}>Get instant answers to your questions, anytime</p>
       </header>
 
       <main style={styles.main}>
@@ -90,6 +106,12 @@ const App: React.FC = () => {
         )}
         <SupportForm onSubmit={handleSubmit} disabled={status === 'waiting'} />
       </main>
+
+      <footer style={styles.footer}>
+        <p style={styles.footerText}>
+          Powered by OmniDesk AI • Your data is secure and private
+        </p>
+      </footer>
     </div>
   );
 };
@@ -97,31 +119,68 @@ const App: React.FC = () => {
 const styles: Record<string, React.CSSProperties> = {
   app: {
     minHeight: '100vh',
+    background: `linear-gradient(180deg, ${colors.purple100} 0%, ${colors.purple50} 100%)`,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '24px 16px',
+    padding: '32px 16px',
   },
   header: {
     textAlign: 'center',
-    marginBottom: '24px',
+    marginBottom: '40px',
+  },
+  logo: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+    marginBottom: '12px',
+  },
+  logoIcon: {
+    fontSize: '36px',
+    background: gradients.primary,
+    borderRadius: '12px',
+    width: '56px',
+    height: '56px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 12px rgba(233, 30, 99, 0.3)',
   },
   title: {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#1a1a2e',
+    fontSize: '42px',
+    fontWeight: '800',
+    background: gradients.primary,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    margin: 0,
   },
   subtitle: {
-    fontSize: '16px',
-    color: '#666',
+    fontSize: '18px',
+    color: colors.gray.dark,
+    fontWeight: '600',
     marginTop: '8px',
+    marginBottom: '4px',
+  },
+  tagline: {
+    fontSize: '15px',
+    color: colors.gray.medium,
   },
   main: {
     width: '100%',
-    maxWidth: '680px',
+    maxWidth: '720px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '24px',
+  },
+  footer: {
+    marginTop: '48px',
+    textAlign: 'center',
+  },
+  footerText: {
+    fontSize: '13px',
+    color: colors.gray.medium,
   },
 };
 
