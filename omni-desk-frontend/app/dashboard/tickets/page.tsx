@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { colors } from '@/lib/colors';
 
-const allTickets = [
+const demoTickets = [
   { id: 'TKT-001', customer: 'John Doe', email: 'john@example.com', subject: 'Password reset issue', channel: 'Email', status: 'Open', priority: 'High', date: '2026-02-09' },
   { id: 'TKT-002', customer: 'Jane Smith', email: 'jane@example.com', subject: 'Billing question', channel: 'WhatsApp', status: 'In Progress', priority: 'Medium', date: '2026-02-09' },
   { id: 'TKT-003', customer: 'Bob Johnson', email: 'bob@example.com', subject: 'Feature request', channel: 'Web', status: 'Resolved', priority: 'Low', date: '2026-02-08' },
@@ -18,6 +18,22 @@ const allTickets = [
 export default function TicketsPage() {
   const [filter, setFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [realTickets, setRealTickets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/tickets')
+      .then((res) => res.json())
+      .then((data) => setRealTickets(Array.isArray(data) ? data : []))
+      .catch((error) => {
+        console.error('Failed to fetch tickets:', error);
+        setRealTickets([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Combine real and demo tickets
+  const allTickets = [...realTickets, ...demoTickets];
 
   const filteredTickets = allTickets.filter((ticket) => {
     const matchesFilter = filter === 'All' || ticket.status === filter;
@@ -33,7 +49,17 @@ export default function TicketsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-darkest mb-2">Tickets</h1>
-        <p className="text-gray-medium">Manage and track all customer support tickets</p>
+        <p className="text-gray-medium">
+          Manage and track all customer support tickets
+          {realTickets.length > 0 && (
+            <span className="ml-2 px-3 py-1 rounded-full bg-green-100 text-green-600 text-sm font-semibold">
+              {realTickets.length} Real
+            </span>
+          )}
+          <span className="ml-2 px-3 py-1 rounded-full bg-purple-100 text-primary-purple text-sm font-semibold">
+            {demoTickets.length} Demo
+          </span>
+        </p>
       </div>
 
       {/* Filters */}
@@ -70,8 +96,17 @@ export default function TicketsPage() {
         </div>
       </div>
 
+      {/* Loading */}
+      {loading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-purple mx-auto"></div>
+          <p className="text-gray-medium mt-4">Loading tickets...</p>
+        </div>
+      )}
+
       {/* Tickets Table */}
-      <div className="bg-white rounded-xl border-2 border-gray-light overflow-hidden">
+      {!loading && (
+        <div className="bg-white rounded-xl border-2 border-gray-light overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -93,17 +128,33 @@ export default function TicketsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredTickets.map((ticket) => (
-                  <tr key={ticket.id} className="border-b border-gray-light hover:bg-purple-50 transition-colors cursor-pointer">
-                    <td className="py-4 px-6 font-mono text-sm text-primary-purple font-bold">
-                      {ticket.id}
-                    </td>
-                    <td className="py-4 px-6">
-                      <div>
-                        <p className="font-semibold text-gray-darkest">{ticket.customer}</p>
-                        <p className="text-sm text-gray-medium">{ticket.email}</p>
-                      </div>
-                    </td>
+                filteredTickets.map((ticket, index) => {
+                  const isReal = index < realTickets.length;
+                  return (
+                    <tr
+                      key={ticket.id}
+                      className={`border-b border-gray-light hover:bg-purple-50 transition-colors cursor-pointer ${
+                        isReal ? 'bg-green-50' : ''
+                      }`}
+                    >
+                      <td className="py-4 px-6 font-mono text-sm font-bold">
+                        <div className="flex items-center gap-2">
+                          <span className={isReal ? 'text-green-600' : 'text-primary-purple'}>
+                            {isReal ? ticket.id.substring(0, 8) + '...' : ticket.id}
+                          </span>
+                          {isReal && (
+                            <span className="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold">
+                              REAL
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div>
+                          <p className="font-semibold text-gray-darkest">{ticket.customer}</p>
+                          <p className="text-sm text-gray-medium">{ticket.email}</p>
+                        </div>
+                      </td>
                     <td className="py-4 px-6 text-gray-dark max-w-xs truncate">
                       {ticket.subject}
                     </td>
@@ -142,9 +193,10 @@ export default function TicketsPage() {
                         {ticket.status}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-gray-medium text-sm">{ticket.date}</td>
-                  </tr>
-                ))
+                      <td className="py-4 px-6 text-gray-medium text-sm">{ticket.date}</td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -168,6 +220,7 @@ export default function TicketsPage() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

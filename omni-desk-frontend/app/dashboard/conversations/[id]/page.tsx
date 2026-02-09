@@ -21,10 +21,20 @@ export default function ConversationDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!conversationId) {
+      setLoading(false);
+      return;
+    }
+
     // Fetch messages for this conversation
+    console.log('Fetching messages for conversation:', conversationId);
     fetch(`/api/messages/${conversationId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        console.log('Response status:', res.status);
+        return res.json();
+      })
       .then((data) => {
+        console.log('Received messages:', data);
         setMessages(Array.isArray(data) ? data : []);
       })
       .catch((error) => {

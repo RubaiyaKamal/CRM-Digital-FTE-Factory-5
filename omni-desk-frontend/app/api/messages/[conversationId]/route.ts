@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
-  const conversationId = params.conversationId;
+  const { conversationId } = await params;
 
   // Real messages from database for conversation 2251c0bb-65a9-4ae3-8b5e-6085453f26fd
   const messagesData: Record<string, any[]> = {

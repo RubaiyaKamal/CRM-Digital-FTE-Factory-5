@@ -14,11 +14,11 @@ export const supportFormSchema = z.object({
       'other',
     ],
     {
-      errorMap: () => ({ message: 'Please select a category' }),
+      message: 'Please select a category',
     }
   ),
   priority: z.enum(['low', 'medium', 'high', 'urgent'], {
-    errorMap: () => ({ message: 'Please select a priority level' }),
+    message: 'Please select a priority level',
   }),
   message: z
     .string()

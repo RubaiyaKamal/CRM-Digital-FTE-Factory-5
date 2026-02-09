@@ -17,7 +17,7 @@ const stats: Stat[] = [
   { value: 2, suffix: 's', prefix: '<', label: 'Average Response Time' },
 ];
 
-function useInView(ref: React.RefObject<HTMLElement>) {
+function useInView(ref: React.RefObject<HTMLElement | null>) {
   const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ function useInView(ref: React.RefObject<HTMLElement>) {
 function AnimatedCounter({ value, suffix = '', prefix = '' }: { value: number; suffix?: string; prefix?: string }) {
   const [count, setCount] = useState(0);
   const countRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(countRef);
+  const isInView = useInView(countRef as React.RefObject<HTMLElement | null>);
 
   useEffect(() => {
     if (!isInView) return;

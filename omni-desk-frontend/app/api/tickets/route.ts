@@ -1,0 +1,86 @@
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  // Real tickets from database (hardcoded for now - will be dynamic later)
+  const realTickets = [
+    {
+      id: '3ccd071e-656e-432e-8527-6e3ae44d88e6',
+      customer: 'Your Submission',
+      email: 'kh0102267@gmail.com',
+      subject: 'Tell me the billing and contact issue',
+      channel: 'Web',
+      status: 'Escalated',
+      priority: 'Urgent',
+      date: '2026-02-09',
+      category: 'billing',
+    },
+    {
+      id: '0f5934a1-5204-4e70-a1bf-1fde0328eb96',
+      customer: 'Your Submission',
+      email: 'kh0102267@gmail.com',
+      subject: 'I have a technical issue with this',
+      channel: 'Web',
+      status: 'Open',
+      priority: 'Urgent',
+      date: '2026-02-09',
+      category: 'technical',
+    },
+    {
+      id: '03df6d72-8de9-4677-a08a-32750d39dcb5',
+      customer: 'Your Submission',
+      email: 'kh0102267@gmail.com',
+      subject: 'define me the issues in my submission',
+      channel: 'Web',
+      status: 'Open',
+      priority: 'Urgent',
+      date: '2026-02-09',
+      category: 'technical',
+    },
+    {
+      id: 'bd6d9a59-6771-405d-848e-e5c602c5fffc',
+      customer: 'Your Submission',
+      email: 'kh0102267@gmail.com',
+      subject: 'How to resolve my issue help me out plz',
+      channel: 'Web',
+      status: 'Resolved',
+      priority: 'Urgent',
+      date: '2026-02-09',
+      category: 'technical',
+    },
+    {
+      id: '84ea5d24-4886-4d8b-9eb4-37102b91c7ff',
+      customer: 'Your Submission',
+      email: 'kh0102267@gmail.com',
+      subject: "I can't log into my account. I've tried resetting my password twice but it's not working",
+      channel: 'Web',
+      status: 'Open',
+      priority: 'High',
+      date: '2026-02-08',
+      category: 'technical',
+    },
+    {
+      id: 'e294997f-a9d4-4488-a51a-52e5a389851d',
+      customer: 'Live Tester',
+      email: 'livetest@example.com',
+      subject: 'My invoice is showing the wrong amount. I was charged $50 but it should be $9.',
+      channel: 'Web',
+      status: 'Open',
+      priority: 'High',
+      date: '2026-02-08',
+      category: 'billing',
+    },
+    {
+      id: '8d488a63-e4d1-4204-9512-606bbca362e6',
+      customer: 'Demo User',
+      email: 'demo@test.com',
+      subject: 'How do I export my data?',
+      channel: 'Web',
+      status: 'Resolved',
+      priority: 'Medium',
+      date: '2026-02-08',
+      category: 'how-to',
+    },
+  ];
+
+  return NextResponse.json(realTickets);
+}
