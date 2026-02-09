@@ -5,6 +5,10 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install
 
+# Accept API URL at build time (default: same-origin via nginx proxy)
+ARG REACT_APP_API_URL=http://localhost:3000
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 COPY . .
 RUN npm run build
 

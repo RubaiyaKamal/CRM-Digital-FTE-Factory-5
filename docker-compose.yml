@@ -100,6 +100,9 @@ services:
     build:
       context: ./src/web-form
       dockerfile: Dockerfile
+      args:
+        # React app uses same-origin requests via nginx proxy — no CORS needed
+        - REACT_APP_API_URL=http://localhost:3000
     container_name: crm_webform
     ports:
       - "3000:80"

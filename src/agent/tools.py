@@ -137,9 +137,9 @@ async def search_knowledge_base(query: str, limit: int = 3) -> str:
             rows = await conn.fetch(
                 """
                 SELECT id, title, content, section, url,
-                       1 - (embedding <=> $1::vector) AS similarity
+                       1 - (embedding <=> CAST($1 AS vector)) AS similarity
                 FROM knowledge_base
-                ORDER BY embedding <=> $1::vector
+                ORDER BY embedding <=> CAST($1 AS vector)
                 LIMIT $2
                 """,
                 str(embedding), limit,

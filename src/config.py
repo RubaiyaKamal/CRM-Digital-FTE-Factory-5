@@ -35,6 +35,9 @@ class Settings:
     # Gmail (mock for dev)
     gmail_mock: bool = os.getenv("GMAIL_MOCK", "true").lower() == "true"
 
+    # CORS
+    cors_origins: str = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000")
+
     # App
     app_env: str = os.getenv("APP_ENV", "development")
     log_level: str = os.getenv("LOG_LEVEL", "INFO")

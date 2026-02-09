@@ -58,12 +58,15 @@ app = FastAPI(
 )
 
 # CORS for React web form
+# Note: allow_credentials=True is incompatible with allow_origins=["*"] per CORS spec.
+# Use explicit origins. Update CORS_ORIGINS env var for production.
+_cors_origins = [o.strip() for o in (settings.cors_origins or "http://localhost:3000,http://localhost:8000").split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
-    allow_credentials=True,
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Type"],
 )
 
 # Routers
