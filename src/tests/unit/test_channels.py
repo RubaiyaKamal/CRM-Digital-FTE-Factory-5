@@ -1,6 +1,6 @@
 """Unit tests for channel adapters."""
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 from src.channels.gmail import GmailAdapter
 from src.channels.whatsapp import WhatsAppAdapter
 from src.channels.web_form import WebFormAdapter
@@ -21,10 +21,14 @@ class TestGmailAdapter:
         assert hook.message_text == "I need help"
 
     @pytest.mark.asyncio
-    async def test_send_mock(self, capsys):
+    async def test_send_mock(self):
         adapter = GmailAdapter()
-        result = await adapter.send("test@test.com", "Hello")
-        assert result is True
+        # Mock the send_email function to avoid actual network calls
+        with patch('src.channels.gmail_client.send_email', new_callable=AsyncMock) as mock_send:
+            mock_send.return_value = True
+            result = await adapter.send("test@test.com", "Hello")
+            assert result is True
+            mock_send.assert_called_once()
 
     def test_validate_signature_always_true_without_token(self):
         adapter = GmailAdapter()
@@ -51,8 +55,12 @@ class TestWhatsAppAdapter:
     @pytest.mark.asyncio
     async def test_send_mock(self):
         adapter = WhatsAppAdapter()
-        result = await adapter.send("+1234567890", "Test message")
-        assert result is True
+        # Mock the send_whatsapp_message function to avoid actual network calls
+        with patch('src.channels.whatsapp_client.send_whatsapp_message', new_callable=AsyncMock) as mock_send:
+            mock_send.return_value = True
+            result = await adapter.send("+1234567890", "Test message")
+            assert result is True
+            mock_send.assert_called_once()
 
 
 class TestWebFormAdapter:
