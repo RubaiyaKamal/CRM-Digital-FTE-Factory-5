@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SupportForm, { FormData } from './SupportForm';
+import MultiChannelContact, { ChannelFormData } from './MultiChannelContact';
 import ConversationView from './ConversationView';
 import { colors, gradients } from './theme';
 
@@ -14,32 +14,64 @@ const App: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'waiting' | 'responded'>('idle');
 
-  const handleSubmit = async (formData: FormData) => {
-    const sid = `${formData.email}-${Date.now()}`;
-    setSessionId(sid);
+  const handleSubmit = async (formData: ChannelFormData) => {
     setStatus('waiting');
 
-    // Add customer message
+    // Build session ID and customer message based on channel
+    let sid: string;
+    let customerMessage: string;
+    let payload: any;
+    let webhookUrl: string;
+
+    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+    if (formData.channel === 'email') {
+      sid = `${formData.email}-${Date.now()}`;
+      customerMessage = `Subject: ${formData.subject}\n\n${formData.body}`;
+      payload = {
+        from: formData.email,
+        subject: formData.subject,
+        body: formData.body,
+        message: formData.body,
+      };
+      webhookUrl = `${apiBaseUrl}/webhooks/gmail`;
+    } else if (formData.channel === 'whatsapp') {
+      sid = `${formData.phone}-${Date.now()}`;
+      customerMessage = formData.message;
+      payload = {
+        From: `whatsapp:${formData.phone}`,
+        Body: formData.message,
+        MessageSid: `WEB${Date.now()}`,
+      };
+      webhookUrl = `${apiBaseUrl}/webhooks/whatsapp`;
+    } else {
+      // web_form
+      sid = `${formData.email}-${Date.now()}`;
+      customerMessage = formData.message;
+      payload = {
+        email: formData.email,
+        message: formData.message,
+        subject: formData.subject || undefined,
+        session_id: sid,
+        name: formData.name,
+        category: formData.category,
+        priority: formData.priority,
+      };
+      webhookUrl = `${apiBaseUrl}/webhooks/web_form`;
+    }
+
+    setSessionId(sid);
+
+    // Add customer message to UI
     setMessages(prev => [...prev, {
       role: 'customer',
-      content: formData.message,
+      content: customerMessage,
       timestamp: new Date(),
     }]);
 
     // Submit to API
     try {
-      const payload = {
-        email: formData.email,
-        message: formData.message,
-        subject: formData.subject || undefined,
-        session_id: sid,
-        // Additional fields for the new form structure
-        name: formData.name,
-        category: formData.category,
-        priority: formData.priority,
-      };
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/webhooks/web_form`, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -54,7 +86,7 @@ const App: React.FC = () => {
 
       // Connect to SSE for response (polls DB via conversation_id)
       const eventSource = new EventSource(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/webhooks/web_form/stream/${conversationId}`
+        `${apiBaseUrl}/webhooks/web_form/stream/${conversationId}`
       );
 
       eventSource.onmessage = (event) => {
@@ -104,7 +136,7 @@ const App: React.FC = () => {
         {messages.length > 0 && (
           <ConversationView messages={messages} status={status} />
         )}
-        <SupportForm onSubmit={handleSubmit} disabled={status === 'waiting'} />
+        <MultiChannelContact onSubmit={handleSubmit} disabled={status === 'waiting'} />
       </main>
 
       <footer style={styles.footer}>
@@ -169,7 +201,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   main: {
     width: '100%',
-    maxWidth: '720px',
+    maxWidth: '1000px',
     display: 'flex',
     flexDirection: 'column',
     gap: '24px',

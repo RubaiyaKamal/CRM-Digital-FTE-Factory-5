@@ -80,6 +80,9 @@ async def _handle_response(payload: dict):
 
             if msg_row and msg_row["metadata"]:
                 metadata = msg_row["metadata"]
+                # Parse metadata if it's a string
+                if isinstance(metadata, str):
+                    metadata = json.loads(metadata)
                 gmail_thread_id = metadata.get("gmail_thread_id")
                 subject = metadata.get("subject", "Re: Support Request")
 

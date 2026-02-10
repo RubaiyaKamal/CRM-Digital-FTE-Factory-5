@@ -2,7 +2,7 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
 import HowItWorks from '@/components/HowItWorks';
-import SupportForm from '@/components/SupportForm';
+import MultiChannelContact from '@/components/MultiChannelContact';
 import Stats from '@/components/Stats';
 import Testimonials from '@/components/Testimonials';
 import Footer from '@/components/Footer';
@@ -16,7 +16,7 @@ export default function Home() {
       <HowItWorks />
       <Stats />
       <Testimonials />
-      <SupportForm />
+      <MultiChannelContact />
       <Footer />
     </div>
   );

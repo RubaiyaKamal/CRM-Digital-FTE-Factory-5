@@ -122,6 +122,32 @@ services:
       - ./credentials.json:/app/credentials.json:ro
     restart: unless-stopped
 
+  response-handler:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: crm_response_handler
+    command: python -m src.workers.response_handler
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://crm_user:crm_pass@postgres:5432/crm_fte
+      KAFKA_BROKERS: kafka:29092
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      WHATSAPP_PHONE_NUMBER: ${WHATSAPP_PHONE_NUMBER}
+      WHATSAPP_MOCK: ${WHATSAPP_MOCK:-false}
+      GMAIL_SENDER_EMAIL: ${GMAIL_SENDER_EMAIL}
+      GMAIL_CREDENTIALS_FILE: credentials.json
+      GMAIL_MOCK: ${GMAIL_MOCK:-false}
+      APP_ENV: development
+    volumes:
+      - ./credentials.json:/app/credentials.json:ro
+    restart: unless-stopped
+
   web-form:
     build:
       context: ./src/web-form
