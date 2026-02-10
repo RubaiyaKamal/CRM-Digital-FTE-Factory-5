@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Mail, MessageSquare, ExternalLink } from 'lucide-react';
+import toast from 'react-hot-toast';
+import ErrorState from '@/components/ErrorState';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Customer {
   id?: string;
@@ -27,25 +30,55 @@ export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [realCustomers, setRealCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
+
+  const fetchCustomers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/customers');
+      if (!res.ok) {
+        throw new Error(`Failed to fetch customers: ${res.statusText}`);
+      }
+      const data = await res.json();
+      setRealCustomers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch customers';
+      console.error('Failed to fetch customers:', err);
+      setError(errorMessage);
+      toast.error(errorMessage);
+      setRealCustomers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('/api/customers')
-      .then((res) => res.json())
-      .then((data) => setRealCustomers(Array.isArray(data) ? data : []))
-      .catch((error) => {
-        console.error('Failed to fetch customers:', error);
-        setRealCustomers([]);
-      })
-      .finally(() => setLoading(false));
+    fetchCustomers();
   }, []);
 
   // Combine real and demo customers
   const allCustomers = [...realCustomers, ...demoCustomers];
 
-  const filteredCustomers = allCustomers.filter((customer) =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = allCustomers.filter((customer) => {
+    const query = searchQuery.toLowerCase();
+    const name = customer.name || customer.phone || 'Unknown';
+    const email = customer.email || '';
+    return name.toLowerCase().includes(query) || email.toLowerCase().includes(query);
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCustomers.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, pageSize]);
 
   return (
     <div>
@@ -80,18 +113,23 @@ export default function CustomersPage() {
       </div>
 
       {/* Loading */}
-      {loading && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-purple mx-auto"></div>
-          <p className="text-gray-medium mt-4">Loading customers...</p>
-        </div>
+      {loading && <LoadingSpinner message="Loading customers..." />}
+
+      {/* Error State */}
+      {!loading && error && (
+        <ErrorState
+          message={error}
+          onRetry={fetchCustomers}
+          retrying={loading}
+        />
       )}
 
       {/* Customers Grid */}
-      {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCustomers.map((customer, index) => {
-            const isReal = index < realCustomers.length;
+      {!loading && !error && (
+        <>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {paginatedCustomers.map((customer, index) => {
+            const isReal = allCustomers.indexOf(customer) < realCustomers.length;
             const conversationId = customer.email === 'kh0102267@gmail.com'
               ? '2251c0bb-65a9-4ae3-8b5e-6085453f26fd'
               : null;
@@ -113,18 +151,18 @@ export default function CustomersPage() {
                         : 'linear-gradient(135deg, #E91E63 0%, #9C27B0 100%)'
                     }}
                   >
-                    {customer.name.split(' ').map(n => n[0]).join('')}
+                    {(customer.name || customer.phone || 'U').split(' ').map(n => n[0]).join('').substring(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-lg font-bold text-gray-darkest truncate">{customer.name}</h3>
+                      <h3 className="text-lg font-bold text-gray-darkest truncate">{customer.name || customer.phone || 'Unknown'}</h3>
                       {isReal && (
                         <span className="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold">
                           REAL
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-medium truncate">{customer.email}</p>
+                    <p className="text-sm text-gray-medium truncate">{customer.email || customer.phone || 'No contact info'}</p>
                   </div>
                 </div>
 
@@ -157,15 +195,22 @@ export default function CustomersPage() {
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  {conversationId ? (
-                    <Link
-                      href={`/dashboard/conversations/${conversationId}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all font-semibold"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      <span className="text-sm">View Chat</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </Link>
+                  {customer.id ? (
+                    <>
+                      <Link
+                        href={`/dashboard/conversations?customer=${customer.id}`}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-all font-semibold"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        <span className="text-sm">View Chat</span>
+                      </Link>
+                      <a
+                        href={`mailto:${customer.email}`}
+                        className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
+                      >
+                        <Mail className="w-4 h-4" />
+                      </a>
+                    </>
                   ) : (
                     <>
                       <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-purple-50 text-primary-purple hover:bg-primary-purple hover:text-white transition-all">
@@ -183,6 +228,78 @@ export default function CustomersPage() {
             );
           })}
         </div>
+
+        {/* Pagination */}
+        {filteredCustomers.length > 0 && (
+          <div className="bg-white rounded-xl border-2 border-gray-light p-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Results Info & Page Size */}
+              <div className="flex items-center gap-4 text-sm">
+                <p className="text-gray-medium">
+                  Showing {startIndex + 1}-{Math.min(endIndex, filteredCustomers.length)} of {filteredCustomers.length} customers
+                </p>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="px-3 py-1 rounded-lg border-2 border-gray-light focus:border-primary-purple focus:outline-none text-gray-darkest"
+                >
+                  <option value={6}>6 per page</option>
+                  <option value={12}>12 per page</option>
+                  <option value={24}>24 per page</option>
+                  <option value={48}>48 per page</option>
+                </select>
+              </div>
+
+              {/* Page Navigation */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg border-2 border-gray-light text-gray-dark hover:border-primary-purple hover:text-primary-purple transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+
+                {/* Page Numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                        currentPage === pageNum
+                          ? 'bg-primary-purple text-white'
+                          : 'border-2 border-gray-light text-gray-dark hover:border-primary-purple hover:text-primary-purple'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-lg border-2 border-gray-light text-gray-dark hover:border-primary-purple hover:text-primary-purple transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {!loading && filteredCustomers.length === 0 && (

@@ -1,36 +1,38 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Real customers from database (hardcoded for now - will be dynamic later)
-  const realCustomers = [
-    {
-      id: 'customer-001',
-      name: 'Your Submission',
-      email: 'kh0102267@gmail.com',
-      phone: '+1234567890',
-      totalTickets: 5,
-      lastContact: '2026-02-09',
-      channels: ['Web', 'Email'],
-    },
-    {
-      id: 'customer-002',
-      name: 'Live Tester',
-      email: 'livetest@example.com',
-      phone: '+1234567891',
-      totalTickets: 3,
-      lastContact: '2026-02-08',
-      channels: ['Web'],
-    },
-    {
-      id: 'customer-003',
-      name: 'Demo User',
-      email: 'demo@test.com',
-      phone: '+1234567892',
-      totalTickets: 2,
-      lastContact: '2026-02-08',
-      channels: ['Web'],
-    },
-  ];
+  try {
+    // Fetch real customers from backend API
+    const response = await fetch('http://localhost:8000/api/v1/customers?limit=100');
 
-  return NextResponse.json(realCustomers);
+    if (!response.ok) {
+      throw new Error(`Backend API returned ${response.status}`);
+    }
+
+    const customers = await response.json();
+
+    // Transform backend format to frontend format
+    const transformedCustomers = customers.map((customer: any) => {
+      // Determine channels based on contact info
+      const channels = [];
+      if (customer.email) channels.push('Email');
+      if (customer.phone) channels.push('WhatsApp');
+      if (channels.length === 0) channels.push('Email'); // Default fallback
+
+      return {
+        id: customer.id,
+        name: customer.name || 'Unknown',
+        email: customer.email || '',
+        phone: customer.phone || '',
+        totalTickets: customer.ticket_count,
+        lastContact: customer.created_at.split('T')[0],
+        channels: channels,
+      };
+    });
+
+    return NextResponse.json(transformedCustomers);
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    return NextResponse.json([]);
+  }
 }

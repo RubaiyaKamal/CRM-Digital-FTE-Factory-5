@@ -48,6 +48,8 @@ async def receive_webhook(channel: str, request: Request):
             # Twilio sends form-encoded data
             form_data = await request.form()
             payload = dict(form_data)
+            # DEBUG: Log the actual payload received from Twilio
+            logger.info(f"WhatsApp webhook payload: From={payload.get('From')}, Body={payload.get('Body')}, MessageSid={payload.get('MessageSid')}")
         else:
             # Other channels send JSON
             payload = await request.json()
@@ -99,9 +101,23 @@ async def receive_webhook(channel: str, request: Request):
             json.dumps(message_metadata),
         )
 
+        # Create ticket record
+        ticket_id = await conn.fetchval(
+            """
+            INSERT INTO tickets (conversation_id, customer_id, channel, category, priority,
+                                 status, sentiment_score, raw_message)
+            VALUES ($1, $2, $3, 'general', 'medium', 'open', 0.5, $4)
+            RETURNING id
+            """,
+            conversation_id,
+            customer_id,
+            webhook.channel.value,
+            webhook.message_text,
+        )
+
     # Publish to Kafka
     kafka_payload = {
-        "ticket_id": str(uuid.uuid4()),
+        "ticket_id": str(ticket_id),
         "conversation_id": str(conversation_id),
         "customer_id": str(customer_id),
         "customer_identifier": webhook.customer_identifier,
