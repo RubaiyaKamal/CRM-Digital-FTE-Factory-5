@@ -1,52 +1,95 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { TrendingUp, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { colors, gradients } from '@/lib/colors';
 
-const stats = [
+const defaultStats = [
   {
+    key: 'totalTickets',
     label: 'Total Tickets',
-    value: '1,234',
-    change: '+12%',
-    trend: 'up',
+    value: '0',
+    change: '+0%',
+    trend: 'up' as const,
     icon: TrendingUp,
     color: colors.primary.purple,
   },
   {
+    key: 'openTickets',
     label: 'Open Tickets',
-    value: '156',
-    change: '+8',
-    trend: 'up',
+    value: '0',
+    change: '+0',
+    trend: 'up' as const,
     icon: AlertCircle,
     color: colors.warning,
   },
   {
+    key: 'resolvedToday',
     label: 'Resolved Today',
-    value: '89',
-    change: '+15%',
-    trend: 'up',
+    value: '0',
+    change: '+0%',
+    trend: 'up' as const,
     icon: CheckCircle,
     color: colors.success,
   },
   {
+    key: 'avgResponseTime',
     label: 'Avg Response Time',
-    value: '1.8s',
-    change: '-0.3s',
-    trend: 'down',
+    value: '0s',
+    change: '0s',
+    trend: 'down' as const,
     icon: Clock,
     color: colors.primary.pink,
   },
 ];
 
-const recentTickets = [
-  { id: 'TKT-001', customer: 'John Doe', subject: 'Password reset issue', channel: 'Email', status: 'Open', priority: 'High' },
-  { id: 'TKT-002', customer: 'Jane Smith', subject: 'Billing question', channel: 'WhatsApp', status: 'In Progress', priority: 'Medium' },
-  { id: 'TKT-003', customer: 'Bob Johnson', subject: 'Feature request', channel: 'Web', status: 'Resolved', priority: 'Low' },
-  { id: 'TKT-004', customer: 'Alice Brown', subject: 'Bug report', channel: 'Email', status: 'Open', priority: 'Urgent' },
-  { id: 'TKT-005', customer: 'Charlie Wilson', subject: 'Account access', channel: 'WhatsApp', status: 'Resolved', priority: 'High' },
-];
-
 export default function DashboardPage() {
+  const router = useRouter();
+  const [stats, setStats] = useState(defaultStats);
+  const [loading, setLoading] = useState(true);
+  const [recentTickets, setRecentTickets] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch dashboard stats
+    fetch('/api/dashboard/stats')
+      .then((res) => res.json())
+      .then((data) => {
+        const updatedStats = defaultStats.map((stat) => ({
+          ...stat,
+          value: data[stat.key]?.value || stat.value,
+          change: data[stat.key]?.change || stat.change,
+          trend: data[stat.key]?.trend || stat.trend,
+        }));
+        setStats(updatedStats);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch dashboard stats:', error);
+        toast.error('Failed to load dashboard stats');
+      })
+      .finally(() => setLoading(false));
+
+    // Fetch recent tickets
+    fetch('/api/tickets')
+      .then((res) => res.json())
+      .then((tickets) => {
+        // Get most recent 5 tickets
+        const recent = tickets.slice(0, 5).map((ticket: any) => ({
+          id: ticket.id?.substring(0, 8) || 'N/A',
+          customer: ticket.customer_name || ticket.email || 'Unknown',
+          subject: ticket.subject || ticket.category || 'No subject',
+          channel: ticket.channel === 'web_form' ? 'Web' : (ticket.channel || 'Email'),
+          status: ticket.status === 'escalated' ? 'Escalated' : (ticket.status || 'Open'),
+          priority: ticket.priority || 'Medium',
+        }));
+        setRecentTickets(recent);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch recent tickets:', error);
+      });
+  }, []);
+
   return (
     <div>
       {/* Header */}
@@ -55,8 +98,17 @@ export default function DashboardPage() {
         <p className="text-gray-medium">Welcome back! Here's what's happening today.</p>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-purple mx-auto"></div>
+          <p className="text-gray-medium mt-4">Loading stats...</p>
+        </div>
+      )}
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => (
           <div
             key={index}
@@ -82,6 +134,7 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Recent Tickets */}
       <div className="bg-white rounded-xl border-2 border-gray-light p-6">
@@ -110,7 +163,11 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {recentTickets.map((ticket) => (
-                <tr key={ticket.id} className="border-b border-gray-light hover:bg-purple-50 transition-colors">
+                <tr
+                  key={ticket.id}
+                  onClick={() => router.push('/dashboard/tickets')}
+                  className="border-b border-gray-light hover:bg-purple-50 transition-colors cursor-pointer"
+                >
                   <td className="py-4 px-4 font-mono text-sm text-primary-purple font-semibold">
                     {ticket.id}
                   </td>

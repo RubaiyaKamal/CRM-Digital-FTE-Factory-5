@@ -39,6 +39,24 @@ class ConversationOut(BaseModel):
     message_count: int
 
 
+class CustomerOut(BaseModel):
+    id: str
+    name: Optional[str]
+    email: Optional[str]
+    phone: Optional[str]
+    created_at: str
+    ticket_count: int
+
+
+class MessageOut(BaseModel):
+    id: str
+    conversation_id: str
+    role: str
+    content: str
+    channel: str
+    created_at: str
+
+
 @router.get("/tickets", response_model=List[TicketOut])
 async def list_tickets(
     status: Optional[str] = Query(None),
@@ -153,6 +171,67 @@ async def list_conversations(
             subject=r["subject"],
             created_at=r["created_at"].isoformat(),
             message_count=r["message_count"],
+        )
+        for r in rows
+    ]
+
+
+@router.get("/conversations/{conversation_id}/messages", response_model=List[MessageOut])
+async def get_conversation_messages(conversation_id: str):
+    """Get all messages in a conversation."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id, conversation_id, role, content, channel, created_at
+            FROM messages
+            WHERE conversation_id = $1
+            ORDER BY created_at ASC
+            """,
+            conversation_id,
+        )
+    return [
+        MessageOut(
+            id=str(r["id"]),
+            conversation_id=str(r["conversation_id"]),
+            role=r["role"],
+            content=r["content"],
+            channel=r["channel"],
+            created_at=r["created_at"].isoformat(),
+        )
+        for r in rows
+    ]
+
+
+@router.get("/customers", response_model=List[CustomerOut])
+async def list_customers(
+    limit: int = Query(50, le=200),
+    offset: int = Query(0),
+):
+    """List customers with ticket counts."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT c.id, c.name, c.email, c.phone, c.created_at,
+                   COUNT(DISTINCT t.id)::int AS ticket_count
+            FROM customers c
+            LEFT JOIN tickets t ON t.customer_id = c.id
+            GROUP BY c.id
+            ORDER BY c.created_at DESC
+            LIMIT $1 OFFSET $2
+            """,
+            limit,
+            offset,
+        )
+    return [
+        CustomerOut(
+            id=str(r["id"]),
+            name=r["name"],
+            email=r["email"],
+            phone=r["phone"],
+            created_at=r["created_at"].isoformat(),
+            ticket_count=r["ticket_count"],
         )
         for r in rows
     ]

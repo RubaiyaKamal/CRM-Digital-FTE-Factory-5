@@ -1,33 +1,32 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Real conversations from database (hardcoded for now - will be dynamic later)
-  const realConversations = [
-    {
-      id: '2251c0bb-65a9-4ae3-8b5e-6085453f26fd',
-      customer: 'kh0102267@gmail.com',
-      email: 'kh0102267@gmail.com',
-      lastMessage: 'Tell me the billing and contact issue',
-      channel: 'Web',
-      created_at: '2026-02-09T09:27:59Z',
-    },
-    {
-      id: '04efac40-2d3c-4296-bd90-b89772ef4e40',
-      customer: 'livetest@example.com',
-      email: 'livetest@example.com',
-      lastMessage: 'Billing issue inquiry',
-      channel: 'Web',
-      created_at: '2026-02-08T13:17:40Z',
-    },
-    {
-      id: 'bf19e90f-b965-440a-a273-a0adf645c052',
-      customer: 'demo@test.com',
-      email: 'demo@test.com',
-      lastMessage: 'Data export request',
-      channel: 'Web',
-      created_at: '2026-02-08T13:14:04Z',
-    },
-  ];
+  try {
+    // Fetch real conversations from backend API
+    const response = await fetch('http://localhost:8000/api/v1/conversations?limit=100');
 
-  return NextResponse.json(realConversations);
+    if (!response.ok) {
+      throw new Error(`Backend API returned ${response.status}`);
+    }
+
+    const conversations = await response.json();
+
+    // Transform backend format to frontend format
+    const transformedConversations = conversations.map((conv: any) => ({
+      conversation_id: conv.id,
+      customer_name: conv.email || conv.customer_id || 'Unknown Customer',
+      email: conv.email || '',
+      last_message: conv.subject || 'New conversation',
+      message: conv.subject || 'New conversation',
+      channel: conv.channel === 'web_form' ? 'web_form' : conv.channel,
+      created_at: conv.created_at,
+      timestamp: conv.created_at,
+      message_count: conv.message_count || 0,
+    }));
+
+    return NextResponse.json(transformedConversations);
+  } catch (error) {
+    console.error('Error fetching conversations:', error);
+    return NextResponse.json([]);
+  }
 }

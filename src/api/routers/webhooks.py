@@ -41,12 +41,19 @@ async def receive_webhook(channel: str, request: Request):
 
     adapter = _adapters[channel]
 
-    # Parse body
+    # Parse body (Twilio sends form data, not JSON)
     try:
         body = await request.body()
-        payload = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
+        if channel == "whatsapp":
+            # Twilio sends form-encoded data
+            form_data = await request.form()
+            payload = dict(form_data)
+        else:
+            # Other channels send JSON
+            payload = await request.json()
+    except Exception as exc:
+        logger.error(f"Failed to parse request body: {exc}")
+        raise HTTPException(status_code=400, detail="Invalid request body")
 
     # Validate Twilio signature for WhatsApp
     if channel == "whatsapp":

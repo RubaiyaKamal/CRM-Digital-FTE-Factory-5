@@ -34,7 +34,7 @@ class CustomerSuccessAgent:
             model=settings.openai_model,
             instructions=SYSTEM_PROMPT,
             tools=[
-                create_ticket,
+                # Note: create_ticket removed - tickets are created by webhooks before agent processes
                 get_customer_history,
                 search_knowledge_base,
                 escalate_to_human,

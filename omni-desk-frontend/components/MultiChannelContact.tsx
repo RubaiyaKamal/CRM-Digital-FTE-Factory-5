@@ -122,90 +122,93 @@ export default function MultiChannelContact() {
     }
   };
 
-  // Channel Selector
-  if (!selectedChannel) {
-    return (
-      <section id="contact" className="py-20 px-4 bg-white">
-        <div className="container mx-auto max-w-5xl">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-darkest mb-4">
-              Contact Our
-              <span
-                className="bg-clip-text text-transparent ml-3"
-                style={{ backgroundImage: gradients.primary }}
-              >
-                AI Assistant
-              </span>
-            </h2>
-            <p className="text-xl text-gray-medium">
-              Reach us through your preferred channel. Our AI agent is available 24/7 to assist you.
-            </p>
-          </div>
-
-          {/* Channel Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {/* Email Card */}
-            <button
-              onClick={() => setSelectedChannel('email')}
-              className="bg-white border-2 border-gray-light rounded-2xl p-8 text-center hover:border-primary-purple hover:shadow-xl transition-all transform hover:scale-105"
-            >
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Mail className="w-8 h-8 text-primary-purple" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-gray-darkest mb-2">Email</h3>
-              <p className="text-gray-medium">Send us an email and get a detailed response</p>
-            </button>
-
-            {/* WhatsApp Card */}
-            <button
-              onClick={() => setSelectedChannel('whatsapp')}
-              className="bg-white border-2 border-gray-light rounded-2xl p-8 text-center hover:border-success hover:shadow-xl transition-all transform hover:scale-105"
-            >
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                  <MessageCircle className="w-8 h-8 text-success" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-gray-darkest mb-2">WhatsApp</h3>
-              <p className="text-gray-medium">Chat with us instantly on WhatsApp</p>
-            </button>
-
-            {/* Web Form Card */}
-            <button
-              onClick={() => setSelectedChannel('web_form')}
-              className="bg-white border-2 border-gray-light rounded-2xl p-8 text-center hover:border-primary-blue hover:shadow-xl transition-all transform hover:scale-105"
-            >
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Globe className="w-8 h-8 text-primary-blue" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-gray-darkest mb-2">Web Form</h3>
-              <p className="text-gray-medium">Fill out our form for structured support</p>
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Email Form
-  if (selectedChannel === 'email') {
-    return <EmailForm onBack={handleBack} onSubmit={(data) => handleChannelSubmit('email', data)} isSubmitting={isSubmitting} />;
-  }
-
-  // WhatsApp Form
-  if (selectedChannel === 'whatsapp') {
-    return <WhatsAppForm onBack={handleBack} onSubmit={(data) => handleChannelSubmit('whatsapp', data)} isSubmitting={isSubmitting} />;
-  }
-
-  // Web Form
+  // Render component
   return (
     <>
-      <WebForm onBack={handleBack} onSubmit={(data) => handleChannelSubmit('web_form', data)} isSubmitting={isSubmitting} />
+      {/* Channel Selector */}
+      {!selectedChannel && (
+        <section id="contact" className="py-20 px-4 bg-white">
+          <div className="container mx-auto max-w-5xl">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-darkest mb-4">
+                Contact Our
+                <span
+                  className="bg-clip-text text-transparent ml-3"
+                  style={{ backgroundImage: gradients.primary }}
+                >
+                  AI Assistant
+                </span>
+              </h2>
+              <p className="text-xl text-gray-medium">
+                Reach us through your preferred channel. Our AI agent is available 24/7 to assist you.
+              </p>
+            </div>
+
+            {/* Channel Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              {/* Email Card */}
+              <button
+                onClick={() => setSelectedChannel('email')}
+                className="bg-white border-2 border-gray-light rounded-2xl p-8 text-center hover:border-primary-purple hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
+                    <Mail className="w-8 h-8 text-primary-purple" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-darkest mb-2">Email</h3>
+                <p className="text-gray-medium">Send us an email and get a detailed response</p>
+              </button>
+
+              {/* WhatsApp Card */}
+              <button
+                onClick={() => setSelectedChannel('whatsapp')}
+                className="bg-white border-2 border-gray-light rounded-2xl p-8 text-center hover:border-success hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                    <MessageCircle className="w-8 h-8 text-success" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-darkest mb-2">WhatsApp</h3>
+                <p className="text-gray-medium">Chat with us instantly on WhatsApp</p>
+              </button>
+
+              {/* Web Form Card */}
+              <button
+                onClick={() => setSelectedChannel('web_form')}
+                className="bg-white border-2 border-gray-light rounded-2xl p-8 text-center hover:border-primary-blue hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Globe className="w-8 h-8 text-primary-blue" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-darkest mb-2">Web Form</h3>
+                <p className="text-gray-medium">Fill out our form for structured support</p>
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Email Form */}
+      {selectedChannel === 'email' && (
+        <EmailForm onBack={handleBack} onSubmit={(data) => handleChannelSubmit('email', data)} isSubmitting={isSubmitting} />
+      )}
+
+      {/* WhatsApp Form */}
+      {selectedChannel === 'whatsapp' && (
+        <WhatsAppForm onBack={handleBack} onSubmit={(data) => handleChannelSubmit('whatsapp', data)} isSubmitting={isSubmitting} />
+      )}
+
+      {/* Web Form */}
+      {selectedChannel === 'web_form' && (
+        <WebForm onBack={handleBack} onSubmit={(data) => handleChannelSubmit('web_form', data)} isSubmitting={isSubmitting} />
+      )}
+
+      {/* Success Modal - Always rendered */}
       <SuccessModal isOpen={showSuccess} onClose={() => setShowSuccess(false)} ticketId={ticketId} />
     </>
   );

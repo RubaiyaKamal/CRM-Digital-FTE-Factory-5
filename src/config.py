@@ -5,6 +5,17 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from pathlib import Path
+
+# Load .env file
+try:
+    from dotenv import load_dotenv
+    # Load from project root
+    env_path = Path(__file__).parent.parent / ".env"
+    load_dotenv(dotenv_path=env_path)
+except ImportError:
+    # python-dotenv not installed, skip
+    pass
 
 
 class Settings:
