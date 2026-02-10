@@ -52,42 +52,60 @@ export default function DashboardPage() {
   const [recentTickets, setRecentTickets] = useState<any[]>([]);
 
   useEffect(() => {
-    // Fetch dashboard stats
-    fetch('/api/dashboard/stats')
-      .then((res) => res.json())
-      .then((data) => {
-        const updatedStats = defaultStats.map((stat) => ({
-          ...stat,
-          value: data[stat.key]?.value || stat.value,
-          change: data[stat.key]?.change || stat.change,
-          trend: data[stat.key]?.trend || stat.trend,
-        }));
-        setStats(updatedStats);
-      })
-      .catch((error) => {
-        console.error('Failed to fetch dashboard stats:', error);
-        toast.error('Failed to load dashboard stats');
-      })
-      .finally(() => setLoading(false));
+    const fetchData = () => {
+      // Fetch dashboard stats
+      fetch('/api/dashboard/stats', { cache: 'no-store' })
+        .then((res) => res.json())
+        .then((data) => {
+          const updatedStats = defaultStats.map((stat) => ({
+            ...stat,
+            value: data[stat.key]?.value || stat.value,
+            change: data[stat.key]?.change || stat.change,
+            trend: data[stat.key]?.trend || stat.trend,
+          }));
+          setStats(updatedStats);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch dashboard stats:', error);
+          toast.error('Failed to load dashboard stats');
+        })
+        .finally(() => setLoading(false));
 
-    // Fetch recent tickets
-    fetch('/api/tickets')
-      .then((res) => res.json())
-      .then((tickets) => {
-        // Get most recent 5 tickets
-        const recent = tickets.slice(0, 5).map((ticket: any) => ({
-          id: ticket.id?.substring(0, 8) || 'N/A',
-          customer: ticket.customer_name || ticket.email || 'Unknown',
-          subject: ticket.subject || ticket.category || 'No subject',
-          channel: ticket.channel === 'web_form' ? 'Web' : (ticket.channel || 'Email'),
-          status: ticket.status === 'escalated' ? 'Escalated' : (ticket.status || 'Open'),
-          priority: ticket.priority || 'Medium',
-        }));
-        setRecentTickets(recent);
-      })
-      .catch((error) => {
-        console.error('Failed to fetch recent tickets:', error);
-      });
+      // Fetch recent tickets
+      fetch('/api/tickets', { cache: 'no-store' })
+        .then((res) => res.json())
+        .then((tickets) => {
+          // Get most recent 5 tickets
+          const recent = tickets.slice(0, 5).map((ticket: any) => ({
+            id: ticket.id?.substring(0, 8) || 'N/A',
+            customer: ticket.customer_name || ticket.email || 'Unknown',
+            subject: ticket.subject || ticket.category || 'No subject',
+            channel: ticket.channel === 'web_form' ? 'Web' : (ticket.channel || 'Email'),
+            status: ticket.status === 'escalated' ? 'Escalated' : (ticket.status || 'Open'),
+            priority: ticket.priority || 'Medium',
+          }));
+          setRecentTickets(recent);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch recent tickets:', error);
+        });
+    };
+
+    // Initial fetch
+    fetchData();
+
+    // Refetch when page becomes visible (user navigates back)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return (

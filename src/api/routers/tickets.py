@@ -203,6 +203,35 @@ async def get_conversation_messages(conversation_id: str):
     ]
 
 
+@router.post("/conversations/{conversation_id}/resolve")
+async def resolve_conversation(conversation_id: str):
+    """Mark a conversation and all its tickets as resolved."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        # Update conversation status
+        await conn.execute(
+            """
+            UPDATE conversations
+            SET status = 'resolved'
+            WHERE id = $1
+            """,
+            conversation_id,
+        )
+
+        # Update all related tickets to resolved
+        await conn.execute(
+            """
+            UPDATE tickets
+            SET status = 'resolved'
+            WHERE conversation_id = $1 AND status != 'resolved'
+            """,
+            conversation_id,
+        )
+
+    logger.info("Conversation %s marked as resolved", conversation_id)
+    return {"success": True, "conversation_id": conversation_id, "status": "resolved"}
+
+
 @router.get("/customers", response_model=List[CustomerOut])
 async def list_customers(
     limit: int = Query(50, le=200),

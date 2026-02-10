@@ -20,12 +20,10 @@ export async function GET() {
       (t: any) => t.status === 'open' || t.status === 'pending'
     ).length;
 
-    // Count tickets resolved today
-    const today = new Date().toISOString().split('T')[0];
-    const resolvedToday = tickets.filter((t: any) => {
-      const resolvedDate = t.resolved_at?.split('T')[0];
-      return resolvedDate === today && t.status === 'resolved';
-    }).length;
+    // Count tickets resolved (all time for now, can be filtered by created_at)
+    const resolvedCount = tickets.filter(
+      (t: any) => t.status === 'resolved'
+    ).length;
 
     // Calculate average response time (mock for now)
     // In production, this would query actual response times from the database
@@ -44,7 +42,7 @@ export async function GET() {
         trend: 'up' as const,
       },
       resolvedToday: {
-        value: resolvedToday.toString(),
+        value: resolvedCount.toString(),
         change: '+15%',
         trend: 'up' as const,
       },

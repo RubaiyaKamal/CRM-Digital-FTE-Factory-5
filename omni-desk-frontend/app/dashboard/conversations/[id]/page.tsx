@@ -19,6 +19,7 @@ export default function ConversationDetailPage() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
     if (!conversationId) {
@@ -52,6 +53,30 @@ export default function ConversationDetailPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handleMarkResolved = async () => {
+    if (!conversationId) return;
+
+    setResolving(true);
+    try {
+      // Update conversation status to resolved
+      const response = await fetch(`/api/conversations/${conversationId}/resolve`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        alert('✅ Conversation marked as resolved!');
+        router.push('/dashboard/conversations');
+      } else {
+        alert('❌ Failed to mark as resolved. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error marking conversation as resolved:', error);
+      alert('❌ An error occurred. Please try again.');
+    } finally {
+      setResolving(false);
+    }
   };
 
   return (
@@ -155,10 +180,12 @@ export default function ConversationDetailPage() {
                 💬 This conversation is from your real submission
               </p>
               <button
-                className="px-4 py-2 rounded-lg text-white font-semibold transition-all hover:scale-105"
+                onClick={handleMarkResolved}
+                disabled={resolving}
+                className="px-4 py-2 rounded-lg text-white font-semibold transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: gradients.primary }}
               >
-                Mark as Resolved
+                {resolving ? 'Resolving...' : 'Mark as Resolved'}
               </button>
             </div>
           </div>
