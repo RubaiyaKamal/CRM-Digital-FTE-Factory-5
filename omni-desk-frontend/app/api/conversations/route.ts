@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 
+interface Customer {
+  id: number;
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
 export async function GET() {
   try {
     // Fetch conversations and customers in parallel
@@ -16,7 +23,7 @@ export async function GET() {
     const customers = customersResponse.ok ? await customersResponse.json() : [];
 
     // Create customer lookup map
-    const customerMap = new Map(customers.map((c: any) => [c.id, c]));
+    const customerMap = new Map<number, Customer>(customers.map((c: any) => [c.id, c]));
 
     // Transform backend format to frontend format with customer data
     const transformedConversations = conversations.map((conv: any) => {
